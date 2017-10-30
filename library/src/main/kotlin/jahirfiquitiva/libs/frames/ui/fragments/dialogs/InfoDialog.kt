@@ -38,19 +38,21 @@ import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.helpers.extensions.buildMaterialDialog
 import jahirfiquitiva.libs.frames.ui.adapters.WallpaperInfoAdapter
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.WallpaperDetail
+import jahirfiquitiva.libs.kauextensions.extensions.actv
+import jahirfiquitiva.libs.kauextensions.extensions.ctxt
 import jahirfiquitiva.libs.kauextensions.extensions.isInHorizontalMode
 
-class InfoDialog:DialogFragment() {
+class InfoDialog : DialogFragment() {
     
-    private var rv:RecyclerView? = null
-    private var progress:ProgressBar? = null
-    private var adapter:WallpaperInfoAdapter? = null
+    private var rv: RecyclerView? = null
+    private var progress: ProgressBar? = null
+    private var adapter: WallpaperInfoAdapter? = null
     
     private val details = ArrayList<WallpaperDetail>()
-    private var palette:Palette? = null
+    private var palette: Palette? = null
     
-    override fun onCreateDialog(savedInstanceState:Bundle?):Dialog {
-        val dialog = activity.buildMaterialDialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val dialog = actv.buildMaterialDialog {
             customView(R.layout.info_dialog, false)
         }
         
@@ -65,16 +67,17 @@ class InfoDialog:DialogFragment() {
         rv?.setPaddingBottom(16.dpToPx)
         rv?.itemAnimator = DefaultItemAnimator()
         
-        val layoutManager = GridLayoutManager(context, if (context.isInHorizontalMode) 3 else 2,
-                                              GridLayoutManager.VERTICAL, false)
+        val layoutManager = GridLayoutManager(
+                ctxt, if (ctxt.isInHorizontalMode) 3 else 2,
+                GridLayoutManager.VERTICAL, false)
         rv?.layoutManager = layoutManager
         
         if (adapter == null) adapter = WallpaperInfoAdapter {
             if (it != 0) {
-                val clipboard = context.getSystemService(
+                val clipboard = ctxt.getSystemService(
                         Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.primaryClip = ClipData.newPlainText("label", it.toHexString())
-                Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
+                Toast.makeText(ctxt, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
             }
         }
         adapter?.setLayoutManager(layoutManager)
@@ -84,7 +87,7 @@ class InfoDialog:DialogFragment() {
         return dialog
     }
     
-    fun setDetailsAndPalette(details:ArrayList<WallpaperDetail>, palette:Palette?) {
+    fun setDetailsAndPalette(details: ArrayList<WallpaperDetail>, palette: Palette?) {
         if (details.size > 0) {
             this.details.clear()
             this.details.addAll(details)
@@ -99,14 +102,14 @@ class InfoDialog:DialogFragment() {
         rv?.visible()
     }
     
-    fun show(context:FragmentActivity) {
-        show(context.supportFragmentManager, TAG)
+    fun show(ctxt: FragmentActivity) {
+        show(ctxt.supportFragmentManager, TAG)
     }
     
     companion object {
         private val TAG = "InfoDialog"
         
-        fun build(details:ArrayList<WallpaperDetail>, palette:Palette?):InfoDialog =
+        fun build(details: ArrayList<WallpaperDetail>, palette: Palette?): InfoDialog =
                 InfoDialog().apply {
                     if (details.size > 0) {
                         this.details.clear()
@@ -115,7 +118,10 @@ class InfoDialog:DialogFragment() {
                     this.palette = palette
                 }
         
-        fun show(context:FragmentActivity, details:ArrayList<WallpaperDetail>, palette:Palette?) =
-                build(details, palette).show(context.supportFragmentManager, TAG)
+        fun show(
+                ctxt: FragmentActivity, details: ArrayList<WallpaperDetail>,
+                palette: Palette?
+                ) =
+                build(details, palette).show(ctxt.supportFragmentManager, TAG)
     }
 }

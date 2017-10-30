@@ -25,12 +25,14 @@ import java.lang.ref.WeakReference
 /**
  * Thanks to James Fenn
  */
-class DownloadThread(frag:WallpaperActionsFragment,
-                     val listener:DownloadListener? = null):Thread() {
+class DownloadThread(
+        frag: WallpaperActionsFragment,
+        val listener: DownloadListener? = null
+                    ) : Thread() {
     
-    private var weakRef:WeakReference<WallpaperActionsFragment>? = null
+    private var weakRef: WeakReference<WallpaperActionsFragment>? = null
     private var running = true
-    private var progress:Int = 0
+    private var progress: Int = 0
     
     init {
         weakRef = WeakReference(frag)
@@ -66,15 +68,16 @@ class DownloadThread(frag:WallpaperActionsFragment,
                             else -> {
                             }
                         }
-                        progress = ((it.getInt(it.getColumnIndex(
-                                DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)) * 100L)
+                        progress = ((it.getInt(
+                                it.getColumnIndex(
+                                        DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)) * 100L)
                                 / it.getInt(
                                 it.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))).toInt()
-                    } catch (e:CursorIndexOutOfBoundsException) {
+                    } catch (e: CursorIndexOutOfBoundsException) {
                         e.printStackTrace()
                         
                         Handler(Looper.getMainLooper()).post {
-                            val fileExists = frag.destFile?.exists() ?: false
+                            val fileExists = frag.destFile?.exists() == true
                             if (fileExists) listener?.onSuccess()
                             else
                                 listener?.onFailure(
@@ -99,7 +102,7 @@ class DownloadThread(frag:WallpaperActionsFragment,
     
     interface DownloadListener {
         fun onSuccess()
-        fun onProgress(progress:Int)
-        fun onFailure(exception:Exception)
+        fun onProgress(progress: Int)
+        fun onFailure(exception: Exception)
     }
 }

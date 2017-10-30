@@ -26,13 +26,14 @@ import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.Credit
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.DashboardCreditViewHolder
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.GlideSectionedViewHolder
-import jahirfiquitiva.libs.frames.ui.adapters.viewholders.GlideViewHolder
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.SectionedHeaderViewHolder
 import jahirfiquitiva.libs.frames.ui.adapters.viewholders.SimpleCreditViewHolder
 
-class CreditsAdapter(@StringRes private val dashboardTitle:Int,
-                     private val manager:RequestManager,
-                     private val credits:ArrayList<Credit>):
+class CreditsAdapter(
+        @StringRes private val dashboardTitle: Int,
+        private val manager: RequestManager,
+        private val credits: ArrayList<Credit>
+                    ) :
         SectionedRecyclerViewAdapter<SectionedViewHolder>() {
     
     init {
@@ -40,36 +41,43 @@ class CreditsAdapter(@StringRes private val dashboardTitle:Int,
         shouldShowFooters(false)
     }
     
-    override fun getSectionCount():Int = 4
+    override fun getSectionCount(): Int = 4
     
-    override fun getItemViewType(section:Int, relativePosition:Int,
-                                 absolutePosition:Int):Int = section
+    override fun getItemViewType(
+            section: Int, relativePosition: Int,
+            absolutePosition: Int
+                                ): Int = section
     
-    override fun onBindViewHolder(holder:SectionedViewHolder?, section:Int, relativePosition:Int,
-                                  absolutePosition:Int) {
+    override fun onBindViewHolder(
+            holder: SectionedViewHolder?, section: Int, relativePosition: Int,
+            absolutePosition: Int
+                                 ) {
         holder?.let {
             if (it is DashboardCreditViewHolder) {
                 when (section) {
-                    0 -> it.setItem(manager,
-                                    credits.filter { it.type == Credit.Type.CREATOR }[relativePosition])
-                    1 -> it.setItem(manager,
-                                    credits.filter { it.type == Credit.Type.DASHBOARD }[relativePosition])
-                    2 -> it.setItem(manager,
-                                    credits.filter { it.type == Credit.Type.DEV_CONTRIBUTION }[relativePosition])
-                    3 -> it.setItem(manager,
-                                    credits.filter { it.type == Credit.Type.UI_CONTRIBUTION }[relativePosition])
+                    0 -> it.setItem(
+                            manager,
+                            credits.filter { it.type == Credit.Type.CREATOR }[relativePosition])
+                    1 -> it.setItem(
+                            manager,
+                            credits.filter { it.type == Credit.Type.DASHBOARD }[relativePosition])
+                    2 -> it.setItem(
+                            manager,
+                            credits.filter { it.type == Credit.Type.DEV_CONTRIBUTION }[relativePosition])
+                    3 -> it.setItem(
+                            manager,
+                            credits.filter { it.type == Credit.Type.UI_CONTRIBUTION }[relativePosition])
                 }
             }
         }
     }
     
-    override fun onViewRecycled(holder:SectionedViewHolder) {
+    override fun onViewRecycled(holder: SectionedViewHolder) {
         super.onViewRecycled(holder)
-        if (holder is GlideViewHolder) holder.doOnRecycle()
-        else (holder as? GlideSectionedViewHolder)?.doOnRecycle()
+        (holder as? GlideSectionedViewHolder)?.onRecycled()
     }
     
-    override fun getItemCount(section:Int):Int =
+    override fun getItemCount(section: Int): Int =
             when (section) {
                 0 -> credits.filter { it.type == Credit.Type.CREATOR }.size
                 1 -> credits.filter { it.type == Credit.Type.DASHBOARD }.size
@@ -78,8 +86,10 @@ class CreditsAdapter(@StringRes private val dashboardTitle:Int,
                 else -> 0
             }
     
-    override fun onBindHeaderViewHolder(holder:SectionedViewHolder?, section:Int,
-                                        expanded:Boolean) {
+    override fun onBindHeaderViewHolder(
+            holder: SectionedViewHolder?, section: Int,
+            expanded: Boolean
+                                       ) {
         if (holder is SectionedHeaderViewHolder) {
             when (section) {
                 0 -> {
@@ -90,20 +100,22 @@ class CreditsAdapter(@StringRes private val dashboardTitle:Int,
                     holder.divider.visible()
                 }
                 2 -> {
-                    holder.setTitle(R.string.dev_contributions, true, expanded,
-                                    { toggleSectionExpanded(section) })
+                    holder.setTitle(
+                            R.string.dev_contributions, true, expanded,
+                            { toggleSectionExpanded(section) })
                     holder.divider.visible()
                 }
                 3 -> {
-                    holder.setTitle(R.string.ui_contributions, true, expanded,
-                                    { toggleSectionExpanded(section) })
+                    holder.setTitle(
+                            R.string.ui_contributions, true, expanded,
+                            { toggleSectionExpanded(section) })
                     holder.divider.visible()
                 }
             }
         }
     }
     
-    override fun onCreateViewHolder(parent:ViewGroup?, viewType:Int):SectionedViewHolder? =
+    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): SectionedViewHolder? =
             when (viewType) {
                 0, 1 -> parent?.inflate(R.layout.item_credits)?.let {
                     DashboardCreditViewHolder(it)
@@ -114,5 +126,5 @@ class CreditsAdapter(@StringRes private val dashboardTitle:Int,
                 }
             }
     
-    override fun onBindFooterViewHolder(holder:SectionedViewHolder?, section:Int) {}
+    override fun onBindFooterViewHolder(holder: SectionedViewHolder?, section: Int) {}
 }

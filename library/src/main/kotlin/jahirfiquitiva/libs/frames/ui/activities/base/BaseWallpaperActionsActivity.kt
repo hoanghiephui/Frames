@@ -26,33 +26,37 @@ import ca.allanwang.kau.utils.isNetworkAvailable
 import com.afollestad.materialdialogs.MaterialDialog
 import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.data.models.Wallpaper
-import jahirfiquitiva.libs.frames.helpers.extensions.PermissionRequestListener
 import jahirfiquitiva.libs.frames.helpers.extensions.buildMaterialDialog
-import jahirfiquitiva.libs.frames.helpers.extensions.checkPermission
 import jahirfiquitiva.libs.frames.helpers.extensions.framesKonfigs
 import jahirfiquitiva.libs.frames.helpers.extensions.openWallpaper
-import jahirfiquitiva.libs.frames.helpers.extensions.requestPermissions
 import jahirfiquitiva.libs.frames.ui.fragments.dialogs.WallpaperActionsFragment
+import jahirfiquitiva.libs.kauextensions.extensions.PermissionRequestListener
 import jahirfiquitiva.libs.kauextensions.extensions.formatCorrectly
 import jahirfiquitiva.libs.kauextensions.extensions.getAppName
 import jahirfiquitiva.libs.kauextensions.extensions.getUri
+import jahirfiquitiva.libs.kauextensions.extensions.requestSinglePermission
+import jahirfiquitiva.libs.kauextensions.ui.activities.FragmentsActivity
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
-abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
+abstract class BaseWallpaperActionsActivity : FragmentsActivity() {
     
-    private var actionDialog:MaterialDialog? = null
-    internal var wallActions:WallpaperActionsFragment? = null
+    private var actionDialog: MaterialDialog? = null
+    internal var wallActions: WallpaperActionsFragment? = null
     
     internal val DOWNLOAD_ACTION_ID = 1
     internal val APPLY_ACTION_ID = 2
     
-    internal abstract var wallpaper:Wallpaper?
-    internal abstract val allowBitmapApply:Boolean
+    internal abstract var wallpaper: Wallpaper?
+    internal abstract val allowBitmapApply: Boolean
     
-    override fun onRequestPermissionsResult(requestCode:Int, permissions:Array<out String>,
-                                            grantResults:IntArray) {
+    override fun autoStatusBarTint(): Boolean = true
+    
+    override fun onRequestPermissionsResult(
+            requestCode: Int, permissions: Array<out String>,
+            grantResults: IntArray
+                                           ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 41 || requestCode == 42) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -63,7 +67,7 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         }
     }
     
-    open fun doItemClick(actionId:Int) {
+    open fun doItemClick(actionId: Int) {
         when (actionId) {
             DOWNLOAD_ACTION_ID -> downloadWallpaper(false)
             APPLY_ACTION_ID -> downloadWallpaper(true)
@@ -71,20 +75,19 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
     }
     
     @SuppressLint("NewApi")
-    private fun downloadWallpaper(toApply:Boolean) {
+    private fun downloadWallpaper(toApply: Boolean) {
         if (isNetworkAvailable) {
-            checkPermission(
+            requestSinglePermission(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    object:PermissionRequestListener {
-                        override fun onPermissionRequest(permission:String) =
-                                requestPermissions(if (toApply) 41 else 42, permission)
-                        
-                        override fun showPermissionInformation(permission:String) =
+                    if (toApply) 41 else 42,
+                    object : PermissionRequestListener() {
+                        override fun onShowInformation(permission: String) =
                                 showPermissionInformation(toApply)
                         
                         override fun onPermissionCompletelyDenied() =
-                                showSnackbar(R.string.permission_denied_completely,
-                                             Snackbar.LENGTH_LONG)
+                                showSnackbar(
+                                        R.string.permission_denied_completely,
+                                        Snackbar.LENGTH_LONG)
                         
                         override fun onPermissionGranted() = checkIfFileExists(toApply)
                     })
@@ -94,17 +97,19 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         }
     }
     
-    private fun showPermissionInformation(toApply:Boolean) {
-        showSnackbar(getString(R.string.permission_request, getAppName()),
-                     Snackbar.LENGTH_LONG, {
-                         setAction(R.string.allow, {
-                             dismiss()
-                             downloadWallpaper(toApply)
-                         })
-                     })
+    private fun showPermissionInformation(toApply: Boolean) {
+        showSnackbar(
+                getString(R.string.permission_request, getAppName()),
+                Snackbar.LENGTH_LONG, {
+                    setAction(
+                            R.string.allow, {
+                        dismiss()
+                        downloadWallpaper(toApply)
+                    })
+                })
     }
     
-    private fun checkIfFileExists(toApply:Boolean) {
+    private fun checkIfFileExists(toApply: Boolean) {
         wallpaper?.let {
             properlyCancelDialog()
             val folder = File(framesKonfigs.downloadsFolder)
@@ -138,7 +143,7 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         }
     }
     
-    private fun startDownload(dest:File) {
+    private fun startDownload(dest: File) {
         wallpaper?.let {
             properlyCancelDialog()
             wallActions = WallpaperActionsFragment()
@@ -146,40 +151,43 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         }
     }
     
-    fun showWallpaperDownloadedSnackbar(dest:File) {
+    fun showWallpaperDownloadedSnackbar(dest: File) {
         sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(dest)))
         runOnUiThread {
             properlyCancelDialog()
-            showSnackbar(getString(R.string.download_successful, dest.toString()),
-                         Snackbar.LENGTH_LONG, {
-                             setAction(R.string.open, {
-                                 dest.getUri(this@BaseWallpaperActionsActivity)?.let {
-                                     openWallpaper(it)
-                                 }
-                             })
-                         })
+            showSnackbar(
+                    getString(R.string.download_successful, dest.toString()),
+                    Snackbar.LENGTH_LONG, {
+                        setAction(
+                                R.string.open, {
+                            dest.getUri(this@BaseWallpaperActionsActivity)?.let {
+                                openWallpaper(it)
+                            }
+                        })
+                    })
         }
     }
     
     @SuppressLint("SimpleDateFormat")
-    private fun getCurrentTimeStamp():String {
+    private fun getCurrentTimeStamp(): String {
         val sdfDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         return sdfDate.format(Date())
     }
     
-    private fun getWallpaperExtension(currenExt:String):String {
+    private fun getWallpaperExtension(currentExt: String): String {
         val validExtensions = arrayOf(".jpg", ".jpeg", ".png")
         validExtensions.forEach {
-            if (currenExt.contains(it, true)) return it
+            if (currentExt.contains(it, true)) return it
         }
         return ".png"
     }
     
-    private fun showWallpaperApplyOptions(dest:File?) {
+    private fun showWallpaperApplyOptions(dest: File?) {
         properlyCancelDialog()
-        val options = arrayListOf(getString(R.string.home_screen),
-                                  getString(R.string.lock_screen),
-                                  getString(R.string.home_lock_screen))
+        val options = arrayListOf(
+                getString(R.string.home_screen),
+                getString(R.string.lock_screen),
+                getString(R.string.home_lock_screen))
         if (isNetworkAvailable && dest != null)
             options.add(getString(R.string.apply_with_other_app))
         
@@ -191,20 +199,25 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
                     applyWallpaper(dest, position == 0, position == 1, position == 2, position == 3)
                 } else {
                     if (allowBitmapApply)
-                        applyBitmapWallpaper(position == 0, position == 1, position == 2,
-                                             position == 3)
+                        applyBitmapWallpaper(
+                                position == 0, position == 1, position == 2,
+                                position == 3)
                 }
             }
         }
         actionDialog?.show()
     }
     
-    abstract fun applyBitmapWallpaper(toHomeScreen:Boolean, toLockScreen:Boolean, toBoth:Boolean,
-                                      toOtherApp:Boolean)
+    abstract fun applyBitmapWallpaper(
+            toHomeScreen: Boolean, toLockScreen: Boolean, toBoth: Boolean,
+            toOtherApp: Boolean
+                                     )
     
-    private fun applyWallpaper(dest:File,
-                               toHomeScreen:Boolean, toLockScreen:Boolean, toBoth:Boolean,
-                               toOtherApp:Boolean) {
+    private fun applyWallpaper(
+            dest: File,
+            toHomeScreen: Boolean, toLockScreen: Boolean, toBoth: Boolean,
+            toOtherApp: Boolean
+                              ) {
         wallpaper?.let {
             properlyCancelDialog()
             wallActions = WallpaperActionsFragment()
@@ -212,20 +225,26 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         }
     }
     
-    fun showWallpaperAppliedSnackbar(toHomeScreen:Boolean, toLockScreen:Boolean, toBoth:Boolean) {
+    fun showWallpaperAppliedSnackbar(
+            toHomeScreen: Boolean, toLockScreen: Boolean,
+            toBoth: Boolean
+                                    ) {
         properlyCancelDialog()
-        showSnackbar(getString(R.string.apply_successful,
-                               getString(when {
-                                             toBoth -> R.string.home_lock_screen
-                                             toHomeScreen -> R.string.home_screen
-                                             toLockScreen -> R.string.lock_screen
-                                             else -> R.string.empty
-                                         }).toLowerCase()), Snackbar.LENGTH_LONG)
+        showSnackbar(
+                getString(
+                        R.string.apply_successful,
+                        getString(
+                                when {
+                                    toBoth -> R.string.home_lock_screen
+                                    toHomeScreen -> R.string.home_screen
+                                    toLockScreen -> R.string.lock_screen
+                                    else -> R.string.empty
+                                }).toLowerCase()), Snackbar.LENGTH_LONG)
     }
     
-    private var file:File? = null
+    private var file: File? = null
     
-    fun applyWallpaperWithOtherApp(dest:File) {
+    fun applyWallpaperWithOtherApp(dest: File) {
         try {
             dest.getUri(this)?.let {
                 file = dest
@@ -237,18 +256,18 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
                         Intent.createChooser(setWall, getString(R.string.apply_with_other_app)),
                         WallpaperActionsFragment.TO_OTHER_APP_CODE)
             } ?: dest.delete()
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
     
-    override fun onActivityResult(requestCode:Int, resultCode:Int, data:Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == WallpaperActionsFragment.TO_OTHER_APP_CODE) {
             try {
                 file?.delete()
                 file = null
-            } catch (e:Exception) {
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
@@ -272,9 +291,12 @@ abstract class BaseWallpaperActionsActivity:BaseActivityWithFragments() {
         actionDialog = null
     }
     
-    private fun showSnackbar(@StringRes text:Int, duration:Int, settings:Snackbar.() -> Unit = {}) {
+    private fun showSnackbar(
+            @StringRes text: Int, duration: Int,
+            settings: Snackbar.() -> Unit = {}
+                            ) {
         showSnackbar(getString(text), duration, settings)
     }
     
-    abstract fun showSnackbar(text:String, duration:Int, settings:Snackbar.() -> Unit = {})
+    abstract fun showSnackbar(text: String, duration: Int, settings: Snackbar.() -> Unit = {})
 }

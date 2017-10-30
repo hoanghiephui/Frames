@@ -15,6 +15,7 @@
  */
 package jahirfiquitiva.libs.frames.ui.activities
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.OnLifecycleEvent
 import android.arch.lifecycle.ViewModelProviders
@@ -39,48 +40,47 @@ import jahirfiquitiva.libs.frames.helpers.extensions.framesKonfigs
 import jahirfiquitiva.libs.frames.providers.viewmodels.CollectionsViewModel
 import jahirfiquitiva.libs.frames.providers.viewmodels.WallpapersViewModel
 import jahirfiquitiva.libs.frames.ui.widgets.CustomToolbar
-import jahirfiquitiva.libs.kauextensions.activities.ThemedActivity
 import jahirfiquitiva.libs.kauextensions.extensions.bind
 import jahirfiquitiva.libs.kauextensions.extensions.dividerColor
 import jahirfiquitiva.libs.kauextensions.extensions.getActiveIconsColorFor
 import jahirfiquitiva.libs.kauextensions.extensions.getBoolean
 import jahirfiquitiva.libs.kauextensions.extensions.getPrimaryTextColorFor
 import jahirfiquitiva.libs.kauextensions.extensions.getSecondaryTextColorFor
-import jahirfiquitiva.libs.kauextensions.extensions.lazyAndroid
 import jahirfiquitiva.libs.kauextensions.extensions.primaryColor
 import jahirfiquitiva.libs.kauextensions.extensions.primaryTextColor
 import jahirfiquitiva.libs.kauextensions.extensions.secondaryTextColor
 import jahirfiquitiva.libs.kauextensions.extensions.tint
+import jahirfiquitiva.libs.kauextensions.ui.activities.ThemedActivity
 import org.jetbrains.anko.collections.forEachWithIndex
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Locale
 
-class MuzeiSettingsActivity:ThemedActivity() {
-    override fun lightTheme():Int = R.style.LightTheme
-    override fun darkTheme():Int = R.style.DarkTheme
-    override fun amoledTheme():Int = R.style.AmoledTheme
-    override fun transparentTheme():Int = R.style.TransparentTheme
-    override fun autoStatusBarTint():Boolean = true
+class MuzeiSettingsActivity : ThemedActivity() {
+    override fun lightTheme(): Int = R.style.LightTheme
+    override fun darkTheme(): Int = R.style.DarkTheme
+    override fun amoledTheme(): Int = R.style.AmoledTheme
+    override fun transparentTheme(): Int = R.style.TransparentTheme
+    override fun autoStatusBarTint(): Boolean = true
     
     private val SEEKBAR_STEPS = 1
     private val SEEKBAR_MAX_VALUE = 13
     private val SEEKBAR_MIN_VALUE = 0
     
     private var selectedCollections = ""
-    private var dialog:MaterialDialog? = null
+    private var dialog: MaterialDialog? = null
     
-    private val collsSummaryText:TextView by bind(R.id.choose_collections_summary)
-    private val seekBar:AppCompatSeekBar by bind(R.id.every_seekbar)
-    private val checkBox:AppCompatCheckBox by bind(R.id.wifi_checkbox)
+    private val collsSummaryText: TextView by bind(R.id.choose_collections_summary)
+    private val seekBar: AppCompatSeekBar by bind(R.id.every_seekbar)
+    private val checkBox: AppCompatCheckBox by bind(R.id.wifi_checkbox)
     
-    private val wallsVM:WallpapersViewModel by lazyAndroid {
+    private val wallsVM: WallpapersViewModel by lazy {
         ViewModelProviders.of(this).get(WallpapersViewModel::class.java)
     }
-    private val collsVM:CollectionsViewModel by lazyAndroid {
+    private val collsVM: CollectionsViewModel by lazy {
         ViewModelProviders.of(this).get(CollectionsViewModel::class.java)
     }
     
-    override fun onCreate(savedInstanceState:Bundle?) {
+    @SuppressLint("WrongViewCast", "MissingSuperCall")
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_muzei_settings)
         
@@ -90,16 +90,18 @@ class MuzeiSettingsActivity:ThemedActivity() {
         toolbar.bindToActivity(this)
         supportActionBar?.title = getString(R.string.muzei_settings)
         
-        toolbar.tint(getPrimaryTextColorFor(primaryColor, 0.6F),
-                     getSecondaryTextColorFor(primaryColor, 0.6F),
-                     getActiveIconsColorFor(primaryColor, 0.6F))
+        toolbar.tint(
+                getPrimaryTextColorFor(primaryColor, 0.6F),
+                getSecondaryTextColorFor(primaryColor, 0.6F),
+                getActiveIconsColorFor(primaryColor, 0.6F))
         
-        val everyTitle:TextView by bind(R.id.every_title)
+        val everyTitle: TextView by bind(R.id.every_title)
         everyTitle.setTextColor(primaryTextColor)
         
-        val everySummary:TextView by bind(R.id.every_summary)
+        val everySummary: TextView by bind(R.id.every_summary)
         everySummary.setTextColor(secondaryTextColor)
-        everySummary.text = getString(R.string.every_x, textFromProgress(
+        everySummary.text = getString(
+                R.string.every_x, textFromProgress(
                 framesKonfigs.muzeiRefreshInterval).toLowerCase(Locale.getDefault()))
         
         with(seekBar) {
@@ -144,23 +146,29 @@ class MuzeiSettingsActivity:ThemedActivity() {
             findViewById<LinearLayout>(R.id.choose_collections).gone()
         }
         
-        seekBar.setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar:SeekBar?, progress:Int, fromUser:Boolean) {
-                val value = SEEKBAR_MIN_VALUE + (progress * SEEKBAR_STEPS)
-                everySummary.text = resources.getString(R.string.every_x,
-                                                        textFromProgress(value).toLowerCase(
-                                                                Locale.getDefault()))
-                saveChanges()
-            }
-            
-            override fun onStartTrackingTouch(p0:SeekBar?) {}
-            
-            override fun onStopTrackingTouch(p0:SeekBar?) {}
-        })
+        seekBar.setOnSeekBarChangeListener(
+                object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(
+                            seekBar: SeekBar?,
+                            progress: Int,
+                            fromUser: Boolean
+                                                  ) {
+                        val value = SEEKBAR_MIN_VALUE + (progress * SEEKBAR_STEPS)
+                        everySummary.text = resources.getString(
+                                R.string.every_x,
+                                textFromProgress(value).toLowerCase(
+                                        Locale.getDefault()))
+                        saveChanges()
+                    }
+                    
+                    override fun onStartTrackingTouch(p0: SeekBar?) {}
+                    
+                    override fun onStopTrackingTouch(p0: SeekBar?) {}
+                })
         
     }
     
-    override fun onOptionsItemSelected(item:MenuItem?):Boolean {
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         item?.let {
             if (it.itemId == android.R.id.home) {
                 doFinish()
@@ -197,16 +205,18 @@ class MuzeiSettingsActivity:ThemedActivity() {
         
         try {
             wallsVM.destroy(this)
-        } catch (ignored:Exception) {
+        } catch (ignored: Exception) {
         }
         try {
             collsVM.destroy(this)
-        } catch (ignored:Exception) {
+        } catch (ignored: Exception) {
         }
         
-        wallsVM.observe(this, {
+        wallsVM.observe(
+                this, {
             destroyDialog()
-            collsVM.observe(this, {
+            collsVM.observe(
+                    this, {
                 destroyDialog()
                 val correct = ArrayList<Collection>()
                 correct.addAll(it.distinct())
@@ -214,7 +224,7 @@ class MuzeiSettingsActivity:ThemedActivity() {
                 correct.distinct()
                 
                 val eachSelectedCollection = selectedCollections.split(",")
-                var selectedIndexes:Array<Int> = arrayOf()
+                var selectedIndexes: Array<Int> = arrayOf()
                 correct.forEachIndexed { index, (name) ->
                     eachSelectedCollection.forEach {
                         if (name.equals(it, true))
@@ -226,27 +236,28 @@ class MuzeiSettingsActivity:ThemedActivity() {
                 dialog = buildMaterialDialog {
                     title(R.string.choose_collections_title)
                     items(correct)
-                    itemsCallbackMultiChoice(selectedIndexes,
-                                             { _, _, text ->
-                                                 val sb = StringBuilder()
-                                                 text.forEachWithIndex { i, item ->
-                                                     if (i > 0 && i < text.size)
-                                                         sb.append(",")
-                                                     sb.append(item)
-                                                 }
-                                                 selectedCollections = sb.toString()
-                                                 collsSummaryText.text = getString(
-                                                         R.string.choose_collections_summary,
-                                                         selectedCollections)
-                                                 saveChanges()
-                                                 true
-                                             })
+                    itemsCallbackMultiChoice(
+                            selectedIndexes,
+                            { _, _, text ->
+                                val sb = StringBuilder()
+                                text.forEachWithIndex { i, item ->
+                                    if (i > 0 && i < text.size)
+                                        sb.append(",")
+                                    sb.append(item)
+                                }
+                                selectedCollections = sb.toString()
+                                collsSummaryText.text = getString(
+                                        R.string.choose_collections_summary,
+                                        selectedCollections)
+                                saveChanges()
+                                true
+                            })
                     positiveText(android.R.string.ok)
                     negativeText(android.R.string.cancel)
                 }
                 dialog?.show()
             })
-            collsVM.loadData(ArrayList(it))
+            collsVM.loadWithContext(this, ArrayList(it))
         })
         wallsVM.loadData(this)
         dialog?.show()
@@ -257,11 +268,11 @@ class MuzeiSettingsActivity:ThemedActivity() {
         saveChanges()
         try {
             wallsVM.destroy(this)
-        } catch (ignored:Exception) {
+        } catch (ignored: Exception) {
         }
         try {
             collsVM.destroy(this)
-        } catch (ignored:Exception) {
+        } catch (ignored: Exception) {
         }
         val intent = Intent(this, FramesArtSource::class.java)
         intent.putExtra("restart", true)
@@ -280,7 +291,7 @@ class MuzeiSettingsActivity:ThemedActivity() {
         doFinish()
     }
     
-    private fun textFromProgress(progress:Int):String {
+    private fun textFromProgress(progress: Int): String {
         when (progress) {
             0 -> return 15.toString() + " " + resources.getString(R.string.minutes)
             1 -> return 30.toString() + " " + resources.getString(R.string.minutes)

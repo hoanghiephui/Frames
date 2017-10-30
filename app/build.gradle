@@ -17,15 +17,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion project.ext.compileSdk
-    buildToolsVersion project.ext.buildTools
+    compileSdkVersion versions.targetSdk
+    buildToolsVersion versions.buildTools
 
-    /*applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.outputFile = new File(output.outputFile.parent,
-                    project.ext.appId + "-v${variant.versionName}-${variant.name}.apk")
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = details.appId + "-v${variant.versionName}-${variant.name}.apk"
         }
-    }*/
+    }
 
     lintOptions {
         abortOnError false
@@ -34,11 +33,11 @@ android {
     }
 
     defaultConfig {
-        applicationId project.ext.appGroup + "." + project.ext.appId.toLowerCase() + ".sample"
-        minSdkVersion project.ext.minSdk
-        targetSdkVersion project.ext.targetSdk
-        versionCode project.ext.versionCode
-        versionName project.ext.versionName
+        applicationId details.appGroup + "." + details.appId.toLowerCase() + ".sample"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode versions.versionCode
+        versionName versions.versionName
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -46,7 +45,7 @@ android {
         release {
             debuggable false
             zipAlignEnabled true
-            minifyEnabled false
+            minifyEnabled true
             shrinkResources false
             proguardFiles 'proguard-android-optimize.txt', 'proguard-rules.pro'
             consumerProguardFiles 'proguard-android-optimize.txt', 'proguard-rules.pro'
@@ -58,13 +57,15 @@ android {
     }
 
     packagingOptions {
+        pickFirst 'META-INF/core_debug.kotlin_module'
         pickFirst 'META-INF/core_release.kotlin_module'
+        pickFirst 'META-INF/library_debug.kotlin_module'
         pickFirst 'META-INF/library_release.kotlin_module'
     }
 }
 
 dependencies {
-    compile project(path: ':library')
+    implementation project(path: ':library')
 }
 
 // TODO: Remove comment marks if you plan on implementing Firebase Notifications

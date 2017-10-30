@@ -21,25 +21,27 @@ import jahirfiquitiva.libs.frames.ui.fragments.base.BaseWallpapersFragment
 import jahirfiquitiva.libs.frames.ui.widgets.EmptyViewRecyclerView
 import jahirfiquitiva.libs.kauextensions.extensions.formatCorrectly
 
-class WallpapersInCollectionFragment:BaseWallpapersFragment() {
+class WallpapersInCollectionFragment : BaseWallpapersFragment() {
     
-    private var collection:Collection? = null
+    private var collection: Collection? = null
     private var wallpapers = ArrayList<Wallpaper>()
     private var firstFavsModification = true
     
     var newFavs = ArrayList<Wallpaper>()
     
-    private fun getWallpapersInCollection(all:ArrayList<Wallpaper>):ArrayList<Wallpaper> {
+    private fun getWallpapersInCollection(all: ArrayList<Wallpaper>): ArrayList<Wallpaper> {
         collection?.let {
             val collectionName = it.name
-            return ArrayList(all.filter {
-                it.collections.formatCorrectly().replace("_", " ").contains(collectionName, true)
-            })
+            return ArrayList(
+                    all.filter {
+                        it.collections.formatCorrectly().replace("_", " ").contains(
+                                collectionName, true)
+                    })
         }
         return ArrayList()
     }
     
-    override fun doOnFavoritesChange(data:ArrayList<Wallpaper>) {
+    override fun doOnFavoritesChange(data: ArrayList<Wallpaper>) {
         super.doOnFavoritesChange(data)
         wallsAdapter?.updateFavorites(getWallpapersInCollection(data))
         if (!firstFavsModification) {
@@ -50,7 +52,7 @@ class WallpapersInCollectionFragment:BaseWallpapersFragment() {
         }
     }
     
-    override fun doOnWallpapersChange(data:ArrayList<Wallpaper>, fromCollectionActivity:Boolean) {
+    override fun doOnWallpapersChange(data: ArrayList<Wallpaper>, fromCollectionActivity: Boolean) {
         super.doOnWallpapersChange(data, fromCollectionActivity)
         wallsAdapter?.setItems(getWallpapersInCollection(data))
     }
@@ -62,7 +64,7 @@ class WallpapersInCollectionFragment:BaseWallpapersFragment() {
     }
     
     companion object {
-        fun create(collection:Collection, wallpapers:ArrayList<Wallpaper>):
+        fun create(collection: Collection, wallpapers: ArrayList<Wallpaper>):
                 WallpapersInCollectionFragment {
             return WallpapersInCollectionFragment().apply {
                 this.collection = collection
@@ -72,8 +74,8 @@ class WallpapersInCollectionFragment:BaseWallpapersFragment() {
         }
     }
     
-    override fun autoStartLoad():Boolean = true
-    override fun fromCollectionActivity():Boolean = true
-    override fun fromFavorites():Boolean = false
-    override fun showFavoritesIcon():Boolean = true
+    override fun autoStartLoad(): Boolean = true
+    override fun fromCollectionActivity(): Boolean = true
+    override fun fromFavorites(): Boolean = false
+    override fun showFavoritesIcon(): Boolean = true
 }

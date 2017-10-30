@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jahirfiquitiva.libs.frames.ui.fragments.presenters
+package jahirfiquitiva.libs.frames.helpers.utils
 
-import android.support.annotation.LayoutRes
-import android.view.View
+import ca.allanwang.kau.logging.KauLogger
 
-interface BasicFragmentPresenter<in T> {
-    @LayoutRes
-    fun getContentLayout():Int
-    
-    fun initUI(content:View)
-    fun onItemClicked(item:T)
-}
+internal object FL : KauLogger("Frames")

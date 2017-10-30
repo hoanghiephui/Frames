@@ -26,44 +26,44 @@ import android.preference.Preference
 import android.preference.PreferenceCategory
 import android.preference.SwitchPreference
 import android.support.design.widget.Snackbar
-import biz.kasual.materialnumberpicker.MaterialNumberPicker
 import ca.allanwang.kau.utils.buildIsLollipopAndUp
 import ca.allanwang.kau.utils.snackbar
 import com.afollestad.materialdialogs.MaterialDialog
+import com.github.stephenvinouze.materialnumberpickercore.MaterialNumberPicker
 import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.data.models.db.FavoritesDatabase
-import jahirfiquitiva.libs.frames.helpers.extensions.PermissionRequestListener
 import jahirfiquitiva.libs.frames.helpers.extensions.buildMaterialDialog
-import jahirfiquitiva.libs.frames.helpers.extensions.checkPermission
 import jahirfiquitiva.libs.frames.helpers.extensions.clearDataAndCache
 import jahirfiquitiva.libs.frames.helpers.extensions.dataCacheSize
 import jahirfiquitiva.libs.frames.helpers.extensions.framesKonfigs
-import jahirfiquitiva.libs.frames.helpers.extensions.requestPermissions
 import jahirfiquitiva.libs.frames.helpers.utils.DATABASE_NAME
 import jahirfiquitiva.libs.frames.ui.activities.SettingsActivity
 import jahirfiquitiva.libs.frames.ui.fragments.base.PreferenceFragment
-import jahirfiquitiva.libs.kauextensions.activities.ThemedActivity
-import jahirfiquitiva.libs.kauextensions.extensions.cardBackgroundColor
+import jahirfiquitiva.libs.kauextensions.extensions.PermissionRequestListener
+import jahirfiquitiva.libs.kauextensions.extensions.actv
+import jahirfiquitiva.libs.kauextensions.extensions.ctxt
 import jahirfiquitiva.libs.kauextensions.extensions.getAppName
 import jahirfiquitiva.libs.kauextensions.extensions.getBoolean
 import jahirfiquitiva.libs.kauextensions.extensions.hasContent
 import jahirfiquitiva.libs.kauextensions.extensions.konfigs
-import jahirfiquitiva.libs.kauextensions.extensions.lazyAndroid
+import jahirfiquitiva.libs.kauextensions.extensions.requestSinglePermission
 import jahirfiquitiva.libs.kauextensions.extensions.secondaryTextColor
+import jahirfiquitiva.libs.kauextensions.ui.activities.ThemedActivity
 import org.jetbrains.anko.doAsync
 
-open class SettingsFragment:PreferenceFragment() {
+open class SettingsFragment : PreferenceFragment() {
     
-    internal val database:FavoritesDatabase by lazyAndroid {
-        Room.databaseBuilder(activity, FavoritesDatabase::class.java,
-                             DATABASE_NAME).fallbackToDestructiveMigration().build()
+    internal val database: FavoritesDatabase by lazy {
+        Room.databaseBuilder(
+                actv, FavoritesDatabase::class.java,
+                DATABASE_NAME).fallbackToDestructiveMigration().build()
     }
-    internal var downloadLocation:Preference? = null
+    internal var downloadLocation: Preference? = null
     
-    var dialog:MaterialDialog? = null
+    var dialog: MaterialDialog? = null
     
     @SuppressLint("NewApi")
-    override fun onCreate(savedInstanceState:Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initPreferences()
     }
@@ -81,14 +81,14 @@ open class SettingsFragment:PreferenceFragment() {
         val themePref = findPreference("theme")
         themePref?.setOnPreferenceClickListener {
             clearDialog()
-            val currentTheme = activity.konfigs.currentTheme
-            dialog = activity.buildMaterialDialog {
+            val currentTheme = actv.konfigs.currentTheme
+            dialog = actv.buildMaterialDialog {
                 title(R.string.theme_setting_title)
                 items(R.array.themes_options)
                 itemsCallbackSingleChoice(currentTheme) { _, _, which, _ ->
                     if (which != currentTheme) {
-                        activity.konfigs.currentTheme = which
-                        if (activity is ThemedActivity) (activity as ThemedActivity).onThemeChanged()
+                        actv.konfigs.currentTheme = which
+                        if (actv is ThemedActivity) (actv as ThemedActivity).onThemeChanged()
                     }
                     true
                 }
@@ -99,42 +99,40 @@ open class SettingsFragment:PreferenceFragment() {
             false
         }
         
-        navbarPref.isChecked = activity.konfigs.hasColoredNavbar
+        navbarPref.isChecked = actv.konfigs.hasColoredNavbar
         navbarPref.setOnPreferenceChangeListener { _, any ->
             val tint = any.toString().equals("true", true)
-            if (tint != activity.konfigs.hasColoredNavbar) {
-                activity.konfigs.hasColoredNavbar = tint
-                if (activity is ThemedActivity) (activity as ThemedActivity).onThemeChanged()
+            if (tint != actv.konfigs.hasColoredNavbar) {
+                actv.konfigs.hasColoredNavbar = tint
+                if (actv is ThemedActivity) (actv as ThemedActivity).onThemeChanged()
             }
             true
         }
         
         val columns = findPreference("columns")
-        if (context.getBoolean(R.bool.isFrames)) {
+        if (ctxt.getBoolean(R.bool.isFrames)) {
             columns?.setOnPreferenceClickListener {
                 clearDialog()
-                val currentColumns = context.framesKonfigs.columns
+                val currentColumns = ctxt.framesKonfigs.columns
                 
-                val numberPicker = MaterialNumberPicker.Builder(context)
-                        .minValue(1)
-                        .maxValue(6)
-                        .defaultValue(currentColumns)
-                        .backgroundColor(context.cardBackgroundColor)
-                        .separatorColor(Color.TRANSPARENT)
-                        .textColor(context.secondaryTextColor)
-                        .enableFocusability(false)
-                        .wrapSelectorWheel(true)
-                        .build()
+                val numberPicker = MaterialNumberPicker(
+                        context = this.ctxt,
+                        minValue = 1,
+                        maxValue = 6,
+                        value = currentColumns,
+                        separatorColor = Color.TRANSPARENT,
+                        textColor = this.ctxt.secondaryTextColor,
+                        wrapped = true)
                 
-                dialog = context.buildMaterialDialog {
+                dialog = ctxt.buildMaterialDialog {
                     title(R.string.wallpapers_columns_setting_title)
                     customView(numberPicker, false)
                     positiveText(android.R.string.ok)
                     onPositive { dialog, _ ->
                         try {
                             val newColumns = numberPicker.value
-                            if (currentColumns != newColumns) context.framesKonfigs.columns = newColumns
-                        } catch (ignored:Exception) {
+                            if (currentColumns != newColumns) ctxt.framesKonfigs.columns = newColumns
+                        } catch (ignored: Exception) {
                         }
                         dialog.dismiss()
                     }
@@ -149,18 +147,18 @@ open class SettingsFragment:PreferenceFragment() {
         val animationsPref = findPreference("animations") as SwitchPreference
         animationsPref.setOnPreferenceChangeListener { _, any ->
             val enable = any.toString().equals("true", true)
-            if (enable != context.framesKonfigs.animationsEnabled)
-                context.framesKonfigs.animationsEnabled = enable
+            if (enable != ctxt.framesKonfigs.animationsEnabled)
+                ctxt.framesKonfigs.animationsEnabled = enable
             true
         }
         
         val hiResPref = findPreference("hi_res_pics") as SwitchPreference
         hiResPref.setOnPreferenceChangeListener { _, any ->
             val enable = any.toString().equals("true", true)
-            if (enable != context.framesKonfigs.fullResGridPictures) {
-                context.framesKonfigs.fullResGridPictures = enable
-                if (activity is SettingsActivity) {
-                    (activity as SettingsActivity).hasClearedFavs = true
+            if (enable != ctxt.framesKonfigs.fullResGridPictures) {
+                ctxt.framesKonfigs.fullResGridPictures = enable
+                if (actv is SettingsActivity) {
+                    (actv as SettingsActivity).hasClearedFavs = true
                 }
             }
             true
@@ -169,8 +167,8 @@ open class SettingsFragment:PreferenceFragment() {
         val deepSearchPref = findPreference("deep_search") as SwitchPreference
         deepSearchPref.setOnPreferenceChangeListener { _, any ->
             val enable = any.toString().equals("true", true)
-            if (enable != context.framesKonfigs.deepSearchEnabled)
-                context.framesKonfigs.deepSearchEnabled = enable
+            if (enable != ctxt.framesKonfigs.deepSearchEnabled)
+                ctxt.framesKonfigs.deepSearchEnabled = enable
             true
         }
         
@@ -184,18 +182,19 @@ open class SettingsFragment:PreferenceFragment() {
         }
         
         val clearData = findPreference("clear_data")
-        clearData?.summary = getString(R.string.data_cache_setting_content, activity.dataCacheSize)
+        clearData?.summary = getString(R.string.data_cache_setting_content, actv.dataCacheSize)
         clearData?.setOnPreferenceClickListener {
             clearDialog()
-            dialog = activity.buildMaterialDialog {
+            dialog = actv.buildMaterialDialog {
                 title(R.string.data_cache_setting_title)
                 content(R.string.data_cache_confirmation)
                 positiveText(android.R.string.ok)
                 negativeText(android.R.string.cancel)
                 onPositive { _, _ ->
-                    activity.clearDataAndCache()
-                    clearData.summary = getString(R.string.data_cache_setting_content,
-                                                  activity.dataCacheSize)
+                    actv.clearDataAndCache()
+                    clearData.summary = getString(
+                            R.string.data_cache_setting_content,
+                            actv.dataCacheSize)
                 }
             }
             dialog?.show()
@@ -203,10 +202,10 @@ open class SettingsFragment:PreferenceFragment() {
         }
         
         val clearDatabase = findPreference("clear_database")
-        if (context.getBoolean(R.bool.isFrames)) {
+        if (ctxt.getBoolean(R.bool.isFrames)) {
             clearDatabase?.setOnPreferenceClickListener {
                 clearDialog()
-                dialog = activity.buildMaterialDialog {
+                dialog = actv.buildMaterialDialog {
                     title(R.string.clear_favorites_setting_title)
                     content(R.string.clear_favorites_confirmation)
                     positiveText(android.R.string.ok)
@@ -214,9 +213,9 @@ open class SettingsFragment:PreferenceFragment() {
                     onPositive { _, _ ->
                         doAsync {
                             database.favoritesDao().nukeFavorites()
-                        }
-                        if (activity is SettingsActivity) {
-                            (activity as SettingsActivity).hasClearedFavs = true
+                            if (activity is SettingsActivity) {
+                                (activity as SettingsActivity).hasClearedFavs = true
+                            }
                         }
                     }
                 }
@@ -232,83 +231,88 @@ open class SettingsFragment:PreferenceFragment() {
         val serviceAvailable = isNotificationsServiceAvailable()
         
         notifPref.isEnabled = serviceAvailable
-        notifPref.isChecked = activity.framesKonfigs.notificationsEnabled && serviceAvailable
+        notifPref.isChecked = actv.framesKonfigs.notificationsEnabled && serviceAvailable
         notifPref.setOnPreferenceChangeListener { _, any ->
             val enable = any.toString().equals("true", true)
-            if (enable != activity.framesKonfigs.notificationsEnabled) {
-                activity.framesKonfigs.notificationsEnabled = enable
+            if (enable != actv.framesKonfigs.notificationsEnabled) {
+                actv.framesKonfigs.notificationsEnabled = enable
             }
             true
         }
     }
     
-    private fun getNotificationsClass():Class<*>? {
+    private fun getNotificationsClass(): Class<*>? {
         return try {
-            val className = context.getString(R.string.notifications_class)
+            val className = ctxt.getString(R.string.notifications_class)
             if (className.hasContent()) Class.forName(className)
             else null
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
     
-    private fun isNotificationsServiceAvailable():Boolean {
+    private fun isNotificationsServiceAvailable(): Boolean {
         return try {
-            val packageManager = context.packageManager
+            val packageManager = ctxt.packageManager
             val klass = getNotificationsClass()
-            val notNull = klass?.let { true } ?: false
+            val notNull = klass?.let { true } == true
             if (notNull) {
-                val intent = Intent(context, klass)
-                val resolveInfo = packageManager.queryIntentServices(intent,
-                                                                     PackageManager.MATCH_DEFAULT_ONLY)
+                val intent = Intent(ctxt, klass)
+                val resolveInfo = packageManager.queryIntentServices(
+                        intent,
+                        PackageManager.MATCH_DEFAULT_ONLY)
                 resolveInfo.size > 0
             } else {
                 false
             }
-        } catch (ex:Exception) {
+        } catch (ex: Exception) {
             ex.printStackTrace()
             false
         }
     }
     
-    fun requestPermission() = activity.checkPermission(
+    fun requestPermission() = actv.requestSinglePermission(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            object:PermissionRequestListener {
-                override fun onPermissionRequest(permission:String) =
-                        activity.requestPermissions(42, permission)
+            42,
+            object : PermissionRequestListener() {
                 
-                override fun showPermissionInformation(permission:String) {
+                override fun onShowInformation(permission: String) {
                     doShowPermissionInformation()
                 }
                 
                 override fun onPermissionCompletelyDenied() {
-                    activity.snackbar(R.string.permission_denied_completely)
+                    actv.snackbar(R.string.permission_denied_completely)
                 }
                 
                 override fun onPermissionGranted() {
-                    if (activity is SettingsActivity)
-                        (activity as SettingsActivity).showLocationChooserDialog()
+                    if (actv is SettingsActivity)
+                        (actv as SettingsActivity).showLocationChooserDialog()
                 }
             })
     
     private fun doShowPermissionInformation() {
-        activity.snackbar(
-                getString(R.string.permission_request, activity.getAppName()),
+        actv.snackbar(
+                getString(R.string.permission_request, actv.getAppName()),
                 builder = {
                     setAction(R.string.allow, { dismiss() })
-                    addCallback(object:Snackbar.Callback() {
-                        override fun onDismissed(transientBottomBar:Snackbar?, event:Int) {
-                            super.onDismissed(transientBottomBar, event)
-                            requestPermission()
-                        }
-                    })
+                    addCallback(
+                            object : Snackbar.Callback() {
+                                override fun onDismissed(
+                                        transientBottomBar: Snackbar?,
+                                        event: Int
+                                                        ) {
+                                    super.onDismissed(transientBottomBar, event)
+                                    requestPermission()
+                                }
+                            })
                 })
     }
     
     fun updateDownloadLocation() {
-        downloadLocation?.summary = getString(R.string.wallpapers_download_location_setting_content,
-                                              activity.framesKonfigs.downloadsFolder)
+        downloadLocation?.summary = getString(
+                R.string.wallpapers_download_location_setting_content,
+                actv.framesKonfigs.downloadsFolder)
     }
     
     fun clearDialog() {

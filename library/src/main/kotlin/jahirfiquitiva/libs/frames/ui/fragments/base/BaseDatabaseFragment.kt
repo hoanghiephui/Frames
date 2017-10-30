@@ -15,6 +15,7 @@
  */
 package jahirfiquitiva.libs.frames.ui.fragments.base
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.ViewModelProviders
 import android.arch.persistence.room.Room
 import android.graphics.Color
@@ -28,38 +29,44 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.ScaleAnimation
 import android.widget.ImageView
 import android.widget.TextView
+import jahirfiquitiva.libs.archhelpers.ui.fragments.ViewModelFragment
 import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.data.models.Wallpaper
 import jahirfiquitiva.libs.frames.data.models.db.FavoritesDao
 import jahirfiquitiva.libs.frames.data.models.db.FavoritesDatabase
-import jahirfiquitiva.libs.frames.helpers.extensions.buildSnackbar
 import jahirfiquitiva.libs.frames.helpers.extensions.createHeartIcon
 import jahirfiquitiva.libs.frames.helpers.utils.DATABASE_NAME
 import jahirfiquitiva.libs.frames.providers.viewmodels.FavoritesViewModel
 import jahirfiquitiva.libs.kauextensions.extensions.SimpleAnimationListener
+import jahirfiquitiva.libs.kauextensions.extensions.actv
 import jahirfiquitiva.libs.kauextensions.extensions.applyColorFilter
+import jahirfiquitiva.libs.kauextensions.extensions.buildSnackbar
+import jahirfiquitiva.libs.kauextensions.extensions.ctxt
 import jahirfiquitiva.libs.kauextensions.extensions.getBoolean
-import org.jetbrains.anko.runOnUiThread
+import jahirfiquitiva.libs.kauextensions.extensions.runOnUiThread
 
 @Suppress("NAME_SHADOWING")
-abstract class BaseDatabaseFragment<in T, in VH:RecyclerView.ViewHolder>:BaseViewModelFragment<T>() {
+abstract class BaseDatabaseFragment<in T, in VH : RecyclerView.ViewHolder> :
+        ViewModelFragment<T>() {
     
-    internal var database:FavoritesDatabase? = null
-    internal var favoritesModel:FavoritesViewModel? = null
+    internal var database: FavoritesDatabase? = null
+    internal var favoritesModel: FavoritesViewModel? = null
     
-    internal var snack:Snackbar? = null
+    internal var snack: Snackbar? = null
     
-    override fun onCreate(savedInstanceState:Bundle?) {
+    @SuppressLint("MissingSuperCall")
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initDatabase()
         initViewModel()
     }
     
     private fun initDatabase() {
-        if (!(context.getBoolean(R.bool.isFrames))) return
+        if (!(ctxt.getBoolean(R.bool.isFrames))) return
         if (database == null) {
-            database = Room.databaseBuilder(context, FavoritesDatabase::class.java,
-                                            DATABASE_NAME).fallbackToDestructiveMigration().build()
+            database = Room.databaseBuilder(
+                    ctxt, FavoritesDatabase::class.java,
+                    DATABASE_NAME).fallbackToDestructiveMigration().build()
         }
     }
     
@@ -68,16 +75,17 @@ abstract class BaseDatabaseFragment<in T, in VH:RecyclerView.ViewHolder>:BaseVie
     }
     
     private fun initFavoritesViewModel() {
-        if (!(context.getBoolean(R.bool.isFrames))) return
+        if (!(ctxt.getBoolean(R.bool.isFrames))) return
         if (database == null) initDatabase()
         if (favoritesModel == null) {
-            favoritesModel = ViewModelProviders.of(activity).get(FavoritesViewModel::class.java)
+            favoritesModel = ViewModelProviders.of(actv).get(FavoritesViewModel::class.java)
         }
     }
     
     override fun registerObserver() {
         initFavoritesViewModel()
-        favoritesModel?.observe(this, {
+        favoritesModel?.observe(
+                this, {
             doOnFavoritesChange(ArrayList(it))
         })
     }
@@ -92,79 +100,87 @@ abstract class BaseDatabaseFragment<in T, in VH:RecyclerView.ViewHolder>:BaseVie
         favoritesModel?.destroy(this)
     }
     
-    internal fun onHeartClicked(heart:ImageView, item:Wallpaper, @ColorInt color:Int) =
+    internal fun onHeartClicked(heart: ImageView, item: Wallpaper, @ColorInt color: Int) =
             animateHeartClick(heart, item, color, !isInFavorites(item))
     
-    open fun doOnFavoritesChange(data:ArrayList<Wallpaper>) {}
-    open fun doOnWallpapersChange(data:ArrayList<Wallpaper>, fromCollectionActivity:Boolean) {}
+    open fun doOnFavoritesChange(data: ArrayList<Wallpaper>) {}
+    open fun doOnWallpapersChange(data: ArrayList<Wallpaper>, fromCollectionActivity: Boolean) {}
     
-    internal fun getDatabase():FavoritesDao? = database?.favoritesDao()
+    internal fun getDatabase(): FavoritesDao? = database?.favoritesDao()
     
-    internal fun isInFavorites(item:Wallpaper):Boolean =
-            favoritesModel?.isInFavorites(item) ?: false
+    internal fun isInFavorites(item: Wallpaper): Boolean =
+            favoritesModel?.isInFavorites(item) == true
     
-    internal fun addToFavorites(item:Wallpaper) =
+    internal fun addToFavorites(item: Wallpaper) =
             getDatabase()?.let {
                 favoritesModel?.addToFavorites(it, item, { showErrorSnackbar() })
             } ?: showErrorSnackbar()
     
-    internal fun removeFromFavorites(item:Wallpaper) =
+    internal fun removeFromFavorites(item: Wallpaper) =
             getDatabase()?.let {
                 favoritesModel?.removeFromFavorites(it, item, { showErrorSnackbar() })
             } ?: showErrorSnackbar()
     
-    abstract fun onItemClicked(item:T, holder:VH)
-    abstract fun fromCollectionActivity():Boolean
-    abstract fun fromFavorites():Boolean
+    abstract fun onItemClicked(item: T, holder: VH)
+    abstract fun fromCollectionActivity(): Boolean
+    abstract fun fromFavorites(): Boolean
     
-    private val ANIMATION_DURATION:Long = 150
-    private fun animateHeartClick(heart:ImageView, item:Wallpaper, @ColorInt color:Int,
-                                  check:Boolean) = context.runOnUiThread {
-        val scale = ScaleAnimation(1F, 0F, 1F, 0F, Animation.RELATIVE_TO_SELF, 0.5F,
-                                   Animation.RELATIVE_TO_SELF, 0.5F)
+    private val ANIMATION_DURATION: Long = 150
+    private fun animateHeartClick(
+            heart: ImageView, item: Wallpaper, @ColorInt color: Int,
+            check: Boolean
+                                 ) = ctxt.runOnUiThread {
+        val scale = ScaleAnimation(
+                1F, 0F, 1F, 0F, Animation.RELATIVE_TO_SELF, 0.5F,
+                Animation.RELATIVE_TO_SELF, 0.5F)
         scale.duration = ANIMATION_DURATION
         scale.interpolator = LinearInterpolator()
-        scale.setAnimationListener(object:SimpleAnimationListener() {
-            override fun onEnd(animation:Animation) {
-                super.onEnd(animation)
-                heart.setImageDrawable(context.createHeartIcon(check).applyColorFilter(color))
-                val nScale = ScaleAnimation(0F, 1F, 0F, 1F, Animation.RELATIVE_TO_SELF, 0.5F,
-                                            Animation.RELATIVE_TO_SELF, 0.5F)
-                nScale.duration = ANIMATION_DURATION
-                nScale.interpolator = LinearInterpolator()
-                nScale.setAnimationListener(object:SimpleAnimationListener() {
-                    override fun onEnd(animation:Animation) {
+        scale.setAnimationListener(
+                object : SimpleAnimationListener() {
+                    override fun onEnd(animation: Animation) {
                         super.onEnd(animation)
-                        postToFavorites(item, check)
+                        heart.setImageDrawable(
+                                ctxt.createHeartIcon(check)?.applyColorFilter(color))
+                        val nScale = ScaleAnimation(
+                                0F, 1F, 0F, 1F, Animation.RELATIVE_TO_SELF, 0.5F,
+                                Animation.RELATIVE_TO_SELF, 0.5F)
+                        nScale.duration = ANIMATION_DURATION
+                        nScale.interpolator = LinearInterpolator()
+                        nScale.setAnimationListener(
+                                object : SimpleAnimationListener() {
+                                    override fun onEnd(animation: Animation) {
+                                        super.onEnd(animation)
+                                        postToFavorites(item, check)
+                                    }
+                                })
+                        heart.startAnimation(nScale)
                     }
                 })
-                heart.startAnimation(nScale)
-            }
-        })
         heart.startAnimation(scale)
     }
     
-    internal fun postToFavorites(item:Wallpaper, check:Boolean) {
+    internal fun postToFavorites(item: Wallpaper, check: Boolean) {
         try {
             if (check) addToFavorites(item) else removeFromFavorites(item)
             showFavsSnackbar(check, item.name)
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             showErrorSnackbar()
         }
     }
     
-    private fun showFavsSnackbar(added:Boolean, name:String) {
-        showSnackBar(getString(
-                if (added) R.string.added_to_favorites else R.string.removed_from_favorites,
-                name))
+    private fun showFavsSnackbar(added: Boolean, name: String) {
+        showSnackBar(
+                getString(
+                        if (added) R.string.added_to_favorites else R.string.removed_from_favorites,
+                        name))
     }
     
     internal fun showErrorSnackbar() {
         showSnackBar(getString(R.string.action_error_content))
     }
     
-    private fun showSnackBar(text:String) {
+    private fun showSnackBar(text: String) {
         snack?.dismiss()
         snack = null
         snack = view?.buildSnackbar(text, Snackbar.LENGTH_SHORT)

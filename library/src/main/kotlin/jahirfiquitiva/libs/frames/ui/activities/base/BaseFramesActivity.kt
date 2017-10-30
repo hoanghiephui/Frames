@@ -35,7 +35,6 @@ import com.github.javiersantos.piracychecker.enums.PirateApp
 import jahirfiquitiva.libs.frames.R
 import jahirfiquitiva.libs.frames.data.models.Wallpaper
 import jahirfiquitiva.libs.frames.helpers.extensions.buildMaterialDialog
-import jahirfiquitiva.libs.frames.helpers.extensions.buildSnackbar
 import jahirfiquitiva.libs.frames.helpers.extensions.framesKonfigs
 import jahirfiquitiva.libs.frames.helpers.utils.ADW_ACTION
 import jahirfiquitiva.libs.frames.helpers.utils.APPLY_ACTION
@@ -47,6 +46,7 @@ import jahirfiquitiva.libs.frames.helpers.utils.TURBO_ACTION
 import jahirfiquitiva.libs.frames.helpers.utils.WALLS_PICKER
 import jahirfiquitiva.libs.frames.providers.viewmodels.IAPItem
 import jahirfiquitiva.libs.frames.providers.viewmodels.IAPViewModel
+import jahirfiquitiva.libs.kauextensions.extensions.buildSnackbar
 import jahirfiquitiva.libs.kauextensions.extensions.getAppName
 import jahirfiquitiva.libs.kauextensions.extensions.getStringArray
 import jahirfiquitiva.libs.kauextensions.extensions.hasContent
@@ -54,37 +54,38 @@ import jahirfiquitiva.libs.kauextensions.extensions.isFirstRunEver
 import jahirfiquitiva.libs.kauextensions.extensions.justUpdated
 import org.jetbrains.anko.contentView
 
-abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcessor.IBillingHandler {
+abstract class BaseFramesActivity : BaseWallpaperActionsActivity(),
+                                    BillingProcessor.IBillingHandler {
     
-    override fun lightTheme():Int = R.style.LightTheme
-    override fun darkTheme():Int = R.style.DarkTheme
-    override fun amoledTheme():Int = R.style.AmoledTheme
-    override fun transparentTheme():Int = R.style.TransparentTheme
+    override fun lightTheme(): Int = R.style.LightTheme
+    override fun darkTheme(): Int = R.style.DarkTheme
+    override fun amoledTheme(): Int = R.style.AmoledTheme
+    override fun transparentTheme(): Int = R.style.TransparentTheme
     
-    var picker:Int = 0
+    var picker: Int = 0
         private set
-    var dialog:MaterialDialog? = null
+    var dialog: MaterialDialog? = null
     
-    private var checker:PiracyChecker? = null
+    private var checker: PiracyChecker? = null
     private var donationsReady = false
-    internal var billingProcessor:BillingProcessor? = null
+    internal var billingProcessor: BillingProcessor? = null
     
-    override var wallpaper:Wallpaper? = null
-    override val allowBitmapApply:Boolean = false
+    override var wallpaper: Wallpaper? = null
+    override val allowBitmapApply: Boolean = false
     
-    override fun onCreate(savedInstanceState:Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         picker = getPickerKey()
         initDonations()
         startLicenseCheck()
     }
     
-    override fun onSaveInstanceState(outState:Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle?) {
         outState?.putInt("pickerKey", picker)
         super.onSaveInstanceState(outState)
     }
     
-    override fun onRestoreInstanceState(savedInstanceState:Bundle?) {
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
         picker = savedInstanceState?.getInt("pickerKey") ?: 0
     }
@@ -95,7 +96,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
             if (getStringArray(R.array.donation_items).isNotEmpty()) {
                 if (BillingProcessor.isIabServiceAvailable(this)) {
                     destroyBillingProcessor()
-                    val licKey:String? = getLicKey()
+                    val licKey: String? = getLicKey()
                     if (licKey != null) {
                         billingProcessor = BillingProcessor(this, licKey, this)
                         billingProcessor?.let {
@@ -104,7 +105,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
                             }
                             try {
                                 donationsEnabled = it.isOneTimePurchaseSupported
-                            } catch (ignored:Exception) {
+                            } catch (ignored: Exception) {
                             }
                             donationsReady = true
                         }
@@ -126,17 +127,21 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
             if (checker != null) {
                 checker?.let {
                     with(it) {
-                        callback(object:PiracyCheckerCallback() {
-                            override fun allow() = showLicensedDialog()
-                            
-                            override fun dontAllow(error:PiracyCheckerError, app:PirateApp?) =
-                                    showNotLicensedDialog(app)
-                            
-                            override fun onError(error:PiracyCheckerError) {
-                                super.onError(error)
-                                showLicenseErrorDialog()
-                            }
-                        })
+                        callback(
+                                object : PiracyCheckerCallback() {
+                                    override fun allow() = showLicensedDialog()
+                                    
+                                    override fun dontAllow(
+                                            error: PiracyCheckerError,
+                                            app: PirateApp?
+                                                          ) =
+                                            showNotLicensedDialog(app)
+                                    
+                                    override fun onError(error: PiracyCheckerError) {
+                                        super.onError(error)
+                                        showLicenseErrorDialog()
+                                    }
+                                })
                         start()
                     }
                 }
@@ -146,7 +151,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         }
     }
     
-    fun getShortcut():String {
+    fun getShortcut(): String {
         if (intent != null && intent.dataString != null &&
                 intent.dataString.contains("_shortcut")) {
             return intent.dataString
@@ -154,7 +159,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         return ""
     }
     
-    internal fun getPickerKey():Int {
+    internal fun getPickerKey(): Int {
         if (intent != null && intent.action != null) {
             return when (intent.action) {
                 APPLY_ACTION -> ICONS_APPLIER
@@ -167,13 +172,13 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
     }
     
     open var donationsEnabled = false
-    open fun amazonInstallsEnabled():Boolean = false
-    open fun checkLPF():Boolean = true
-    open fun checkStores():Boolean = true
-    abstract fun getLicKey():String?
+    open fun amazonInstallsEnabled(): Boolean = false
+    open fun checkLPF(): Boolean = true
+    open fun checkStores(): Boolean = true
+    abstract fun getLicKey(): String?
     
     // Not really needed to override
-    open fun getLicenseChecker():PiracyChecker? {
+    open fun getLicenseChecker(): PiracyChecker? {
         destroyChecker() // Important
         val checker = PiracyChecker(this)
         getLicKey()?.let {
@@ -200,12 +205,13 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         dialog?.show()
     }
     
-    internal fun showNotLicensedDialog(pirateApp:PirateApp?) {
+    internal fun showNotLicensedDialog(pirateApp: PirateApp?) {
         destroyDialog()
         val pirateAppName = pirateApp?.name ?: ""
         val content = if (pirateAppName.hasContent()) {
-            getString(R.string.license_invalid_content, getAppName(),
-                      getString(R.string.license_invalid_content_extra, pirateAppName))
+            getString(
+                    R.string.license_invalid_content, getAppName(),
+                    getString(R.string.license_invalid_content_extra, pirateAppName))
         } else {
             getString(R.string.license_invalid_content, getAppName(), "~")
         }
@@ -274,7 +280,8 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
             if (it.isInitialized) {
                 val donationViewModel = ViewModelProviders.of(this).get(IAPViewModel::class.java)
                 donationViewModel.iapBillingProcessor = it
-                donationViewModel.observe(this, {
+                donationViewModel.observe(
+                        this, {
                     if (it.size > 0) {
                         showDonationDialog(ArrayList(it))
                     } else {
@@ -294,12 +301,13 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         }
     }
     
-    private fun showDonationDialog(items:ArrayList<IAPItem>) {
+    private fun showDonationDialog(items: ArrayList<IAPItem>) {
         destroyDialog()
         dialog = buildMaterialDialog {
             title(R.string.donate)
             items(items)
-            itemsCallbackSingleChoice(0, { _, _, which, _ ->
+            itemsCallbackSingleChoice(
+                    0, { _, _, which, _ ->
                 billingProcessor?.purchase(this@BaseFramesActivity, items[which].id)
                 true
             })
@@ -309,17 +317,19 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         dialog?.show()
     }
     
-    private fun showDonationErrorDialog(error:Int, reason:String?) {
+    private fun showDonationErrorDialog(error: Int, reason: String?) {
         destroyDialog()
         dialog = buildMaterialDialog {
             title(R.string.error_title)
-            content(getString(R.string.donate_error, error.toString(),
-                              reason ?: getString(R.string.donate_error_unknown)))
+            content(
+                    getString(
+                            R.string.donate_error, error.toString(),
+                            reason ?: getString(R.string.donate_error_unknown)))
         }
         dialog?.show()
     }
     
-    override fun onProductPurchased(productId:String, details:TransactionDetails?) {
+    override fun onProductPurchased(productId: String, details: TransactionDetails?) {
         billingProcessor?.let {
             if (it.consumePurchase(productId)) {
                 destroyDialog()
@@ -333,9 +343,10 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         }
     }
     
-    override fun onBillingError(errorCode:Int, error:Throwable?) {
-        showDonationErrorDialog(errorCode,
-                                (error?.message ?: getString(R.string.donate_error_unknown)))
+    override fun onBillingError(errorCode: Int, error: Throwable?) {
+        showDonationErrorDialog(
+                errorCode,
+                (error?.message ?: getString(R.string.donate_error_unknown)))
         destroyBillingProcessor()
     }
     
@@ -363,7 +374,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         donationsReady = false
     }
     
-    override fun onActivityResult(requestCode:Int, resultCode:Int, data:Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (billingProcessor != null) {
             billingProcessor?.let {
                 if (!(it.handleActivityResult(requestCode, resultCode, data))) {
@@ -378,11 +389,13 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
     override fun onBillingInitialized() {}
     override fun onPurchaseHistoryRestored() {}
     
-    override fun applyBitmapWallpaper(toHomeScreen:Boolean, toLockScreen:Boolean, toBoth:Boolean,
-                                      toOtherApp:Boolean) {
+    override fun applyBitmapWallpaper(
+            toHomeScreen: Boolean, toLockScreen: Boolean, toBoth: Boolean,
+            toOtherApp: Boolean
+                                     ) {
     }
     
-    override fun showSnackbar(text:String, duration:Int, settings:Snackbar.() -> Unit) {
+    override fun showSnackbar(text: String, duration: Int, settings: Snackbar.() -> Unit) {
         contentView?.let {
             val snack = it.buildSnackbar(text, duration, builder = settings)
             
@@ -394,7 +407,7 @@ abstract class BaseFramesActivity:BaseWallpaperActionsActivity(), BillingProcess
         }
     }
     
-    internal fun showWallpaperOptionsDialog(wallpaper:Wallpaper) {
+    internal fun showWallpaperOptionsDialog(wallpaper: Wallpaper) {
         this.wallpaper = wallpaper
         destroyDialog()
         dialog = buildMaterialDialog {
