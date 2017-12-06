@@ -124,7 +124,7 @@ open class ViewerActivity : BaseWallpaperActionsActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         enableTranslucentStatusBar()
         navigationBarColor = Color.parseColor("#66000000")
         
@@ -552,8 +552,8 @@ open class ViewerActivity : BaseWallpaperActionsActivity() {
             var bottomNavBar = 0
             var sideNavBar = 0
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val tabletMode = resources.getBoolean(R.bool.md_is_tablet)
-                if (tabletMode || isInPortraitMode) {
+                //val tabletMode = resources.getBoolean(R.bool.md_is_tablet)
+                if ( isInPortraitMode) {
                     bottomNavBar = navigationBarHeight
                 } else {
                     sideNavBar = navigationBarHeight
